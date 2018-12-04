@@ -1,8 +1,28 @@
-function Apply() {
-  alert('changer are applied');
+function apply() {
+  alert('changes are applied');
 }
 
-function generateTableBridge(){
+function discard(){
+  alert('changes are discard');
+  location.href = "../index.html";
+}
+
+function goBackHome(){
+  location.href = "../index.html";
+}
+
+function generateTableBridge(a){
   var table = document.getElementById('bridge-info-container');
-  table.innerHTML += '<table> </table>';
+  var tableData = '<table>';
+
+  for (var i = 0; i < a; i++) {
+    tableData += '<tr>';
+    tableData += '<td>Option ' + i + '</td>';
+    tableData += '<td> <input type="text"> </td>';
+    tableData += '</tr>';
+  }
+
+  tableData += '</table>';
+
+  table.innerHTML += tableData;
 }

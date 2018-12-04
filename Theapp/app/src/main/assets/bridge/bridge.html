@@ -10,15 +10,13 @@
         <div id="body-container">
             <div class="menu-container">
                 <div id="bridge-info-container">
-                <!-- Javascript code should be
-                added here to display bridge info -->
-                <script> generateTableBridge(); </script>
+                  <script> generateTableBridge(10); </script>
                 </div>
 
                 <div class="button-container">
-                    <button class="button-one" onclick="Apply();"> Apply </button>
-                    <button class="button-one"> Discard </button>
-                    <button class="button-one"> Close </button>
+                    <button class="button-one" onclick="apply();"> Apply </button>
+                    <button class="button-one" onclick="discard();"> Discard </button>
+                    <button class="button-one" onclick="goBackHome();"> Close </button>
                 </div>
             </div>
         </div>
