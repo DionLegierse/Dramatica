@@ -3,8 +3,7 @@ function apply() {
 }
 
 function discard(){
-  alert('changes are discard');
-  location.href = "../index.html";
+  alert('changes are discarded');
 }
 
 function goBackHome(){
