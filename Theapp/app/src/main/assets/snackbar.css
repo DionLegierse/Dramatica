@@ -1,0 +1,13 @@
+#snackbar{
+  visibility: visible;
+  z-index: 1;
+  width: 50%;
+  height: 50px;
+  background-color: #FAFA00;
+  font-color: Black;
+  border-radius: 5px;
+  border: 1px solid black;
+  margin: 0 auto;
+  text-align: center;
+  line-height: 50px;
+}
