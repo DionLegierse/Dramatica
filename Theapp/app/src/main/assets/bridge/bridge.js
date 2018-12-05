@@ -1,9 +1,25 @@
 function apply() {
-  alert('changes are applied');
+  var snackbar = document.getElementById("snackbar");
+
+  snackbar.innerHTML = "Changes have been applied";
+
+  snackbar.className = "animate";
+  setTimeout(function(){
+    snackbar.className = snackbar.className.replace("animate", "");
+    snackbar.innerHTML = "";
+  }, 3000);
 }
 
 function discard(){
-  alert('changes are discarded');
+  var snackbar = document.getElementById("snackbar");
+
+  snackbar.innerHTML = "Changes have been discarded";
+
+  snackbar.className = "animate";
+  setTimeout(function(){
+    snackbar.className = snackbar.className.replace("animate", "");
+    snackbar.innerHTML = "";
+  }, 3000);
 }
 
 function goBackHome(){
