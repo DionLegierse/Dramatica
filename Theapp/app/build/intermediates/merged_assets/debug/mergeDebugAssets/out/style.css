@@ -1,7 +1,47 @@
-.button{
-
+.button-container{
+    text-align: center;
+    width: 100%;
+    margin: 0 auto;
 }
 
-.button-container{
-    align: center;
+.menu-container{
+    text-align: center;
+}
+
+.button-one{
+    width: 100%;
+    height: 50px;
+    border-radius: 10px 25px;
+    background: #FAFA00;
+    font-size: 30px;
+}
+
+#logo{
+  width: auto;
+  max-width: 400px;
+}
+
+#body-container{
+  max-width: 1000px;
+  margin: 0 auto;
+  position: relative;
+}
+
+#bridge-info-container{
+  text-align: center;
+}
+
+table{
+  text-align: left;
+  width: 100%;
+  margin:0 auto;
+}
+
+table, tr, td{
+  font-size : 30px;
+  border: 1px solid black;
+}
+
+body{
+  background-color: #FFBC58;
 }
