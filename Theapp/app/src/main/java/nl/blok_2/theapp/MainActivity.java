@@ -2,7 +2,6 @@ package nl.blok_2.theapp;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.webkit.WebChromeClient;
 import android.webkit.WebViewClient;
 import android.webkit.WebView;
 
