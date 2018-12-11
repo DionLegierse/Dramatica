@@ -1,3 +1,3 @@
 function bridgeSettingsButton() {
-        location.href = "bridge/bridge.html";
-};
+      window.location.href = "bridge/bridge.html";
+}
