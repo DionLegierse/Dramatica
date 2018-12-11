@@ -1,0 +1,60 @@
+#snackbar{
+  visibility: hidden;
+  z-index: 1;
+  min-width: 200px;
+  margin-left: -100px;
+  height: 50px;
+  left: 50%;
+  position: fixed;
+  bottom: 30px;
+
+  background-color: #FAFA00;
+  font-color: Black;
+  border-radius: 5px;
+  border: 1px solid black;
+
+  text-align: center;
+  line-height: 50px;
+}
+
+#snackbar.animate{
+  visibility: visible;
+  -webkit-animation: slideup 0.5s, slidedown 0.5s 2.5s;
+  animation: slideup 0.5s, slidedown 0.5s 2.5s;
+}
+
+@keyframes slideup {
+  from{
+    bottom: -50px;
+  }
+  to{
+    bottom: 30px;
+  }
+}
+
+@-webkit-keyframes slideup{
+  from{
+    bottom: -50px;
+  }
+  to{
+    bottom: 30px;
+  }
+}
+
+@keyframes slidedown {
+  from{
+    bottom: 30px;
+  }
+  to{
+    bottom: -50px;
+  }
+}
+
+@-webkit-keyframes slidedown{
+  from{
+    bottom: 30px;
+  }
+  to{
+    bottom: -50px;
+  }
+}
