@@ -38,11 +38,14 @@ void receivedCallback( uint32_t from, String &msg )
     	"Button": [[0, 0], [0, 0]]
     }
     */
+    Serial.println("=======================JSON=========================");
     DynamicJsonBuffer jsonBuffer;
-    JsonObject& root = jsonBuffer.parseObject(msg);
+    JsonObject& root = jsonBuffer.parseObject(msg.c_str());
     if (root.success())
     {
+        Serial.println("======================SUCCES========================");
         int n = 0;
+        //while loop might be dangerous because of skedular
         while (nodeInfo[n].address != 0)
         {
             n++;
@@ -60,31 +63,39 @@ void receivedCallback( uint32_t from, String &msg )
     }
     else
     {
+        //give an error if the root didn't parse
         Serial.println("Root error, no json detected!");
     }
 
-    int i = -1;
-    //toggle led 0
+    Serial.println("======================BUTTONs=======================");
     if (strcmp(msg.c_str(), "GreenToggle") == 0)
     {
-        i = 0;
+        //toggle led with index i;
+        if (ledOn[0])
+            ledOn[0] = !ledOn[0];
+        else if (!ledOn[0])
+            ledOn[0] = !ledOn[0];
+
+        if (ledOn[0])
+            digitalWrite(led[0], HIGH);
+        else if (!ledOn[0])
+            digitalWrite(led[0], LOW);
     }
     //toggle led 1
     if (strcmp(msg.c_str(), "RedToggles") == 0)
     {
-        i = 1;
+        //toggle led with index i;
+        if (ledOn[1])
+            ledOn[1] = !ledOn[1];
+        else if (!ledOn[1])
+            ledOn[1] = !ledOn[1];
+
+        if (ledOn[1])
+            digitalWrite(led[1], HIGH);
+        else if (!ledOn[1])
+            digitalWrite(led[1], LOW);
     }
-
-    //toggle led with index i;
-    if (ledOn[i])
-        ledOn[i] = !ledOn[i];
-    else if (!ledOn[i])
-        ledOn[i] = !ledOn[i];
-
-    if (ledOn[i])
-        digitalWrite(led[i], HIGH);
-    else if (!ledOn[i])
-        digitalWrite(led[i], LOW);
+    Serial.println("=======================DONE=========================");
 }
 
 void newConnectionCallback(uint32_t nodeId)
@@ -135,11 +146,15 @@ void loop()
             {
                 String msg = "GreenToggle";
                 mesh.sendSingle(nodeInfo[i].address, msg);
+
+                Serial.println(msg);
             }
             if (nodeInfo[i].button[i][1] == 1)
             {
                 String msg = "RedToggle";
                 mesh.sendSingle(nodeInfo[i].address, msg);
+
+                Serial.println(msg);
             }
             allowButton[i] = !allowButton[i];
         }

@@ -81,26 +81,16 @@ void loop()
 
     if (Serial.available() > 0 && parseJson == false)
     {
-        Serial.println("========================Start=======================");
         int msgIn = Serial.read();
-        Serial.print("I got: ");
-        Serial.println(msgIn, DEC);
 
-        Serial.println("========================Counter=====================");
-
-        Serial.println(counter);
         msgSerial[counter] = msgIn;
         if (msgSerial[counter] == '}')
         {
             parseJson = true;
         }
         counter ++;
-        Serial.println("=====================msgSerial======================");
-
-        Serial.println(msgSerial[counter]);
-
-        //send this for test
-        //"{ "AddressIn": 123412, "AddressOut": 123412, "Button": [[0,0], [0,0]] }"
+        //Test JSON
+        // "{ "AddressIn": 123412, "AddressOut": 123412, "Button": [[1,2], [3,4]] }"
     }
 
     if (parseJson)
@@ -116,21 +106,26 @@ void loop()
         if (root.success())
         {
             Serial.println("======================SUCCES========================");
-            int addressin = root["AddressIn"];
-            int addressout = root["AddressOut"];
-            int button;
+            uint32_t addressIn = root["AddressIn"];
+            uint32_t addressOut = root["AddressOut"];
+            uint32_t button;
 
-            Serial.println(addressin);
-            Serial.println(addressout);
+            Serial.print("AddressIn:\t");
+            Serial.println(addressIn);
+            Serial.print("AddressOut:\t");
+            Serial.println(addressOut);
 
             for (size_t i = 0; i < 2; i++)
             {
                 for (size_t k = 0; k < 2; k++)
                 {
-                    button = root["Butoton"][i][k];
+                    Serial.print("Button:\t");
+                    button = root["Button"][i][k];
                     Serial.println(button);
                 }
             }
+
+            mesh.sendSingle(addressIn, msgOut);
         }
         Serial.println("========================End=========================\n\n\n\n");
         parseJson = false;
