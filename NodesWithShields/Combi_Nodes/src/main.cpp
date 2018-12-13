@@ -33,7 +33,8 @@ void receivedCallback( uint32_t from, String &msg )
     Serial.printf( "startHere: Received from %u msg=%s\n", from, msg.c_str() );
     /* Json format
     {
-    	"Address": 123412,
+    	"AddressIn": 123412,
+    	"AddressOut": 123412,
     	"Button": [[0, 0], [0, 0]]
     }
     */
@@ -48,7 +49,7 @@ void receivedCallback( uint32_t from, String &msg )
         }
 
         //bind button one to the 2 leds
-        nodeInfo[n].address = root["Address"];
+        nodeInfo[n].address = root["AddressOut"];
         for (size_t i = 0; i < 2; i++)
         {
             for (size_t k = 0; k < 2; k++)
@@ -76,7 +77,7 @@ void receivedCallback( uint32_t from, String &msg )
       digitalWrite(led[0], LOW);
   }
   //toggle led 1
-    if (strcmp(msg.c_str(), "RedToggle") == 0)
+    if (strcmp(msg.c_str(), "RedToggles") == 0)
     {
         if (ledOn[1])
             ledOn[1] = !ledOn[1];
