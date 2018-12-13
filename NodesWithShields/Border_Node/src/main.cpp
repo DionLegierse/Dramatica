@@ -15,8 +15,12 @@ const int reset     = D4;
 bool allowButton[2] = {true, true};
 bool ledOn[2]       = {false, false};
 
+char msgSerial[100];
+int counter = 0;
+bool parseJson = false;
+
 Scheduler userScheduler; // to control your personal task
-painlessMesh  mesh;
+painlessMesh mesh;
 
 //struct to configure inputs/outputs
 struct NodeInfo
@@ -32,59 +36,8 @@ void receivedCallback( uint32_t from, String &msg )
 {
     Serial.printf( "startHere: Received from %u msg=%s\n", from, msg.c_str() );
     /* Json format
-    {
-    	"AddressIn": 123412,
-    	"AddressOut": 123412,
-    	"Button": [[0, 0], [0, 0]]
-    }
+    { "AddressIn": 123412, "AddressOut": 123412, "Button": [[0, 0], [0, 0]] }
     */
-    DynamicJsonBuffer jsonBuffer;
-    JsonObject& root = jsonBuffer.parseObject(msg);
-    if (root.success())
-    {
-        int n = 0;
-        while (nodeInfo[n].address != 0)
-        {
-            n++;
-        }
-
-        //bind button one to the 2 leds
-        nodeInfo[n].address = root["AddressOut"];
-        for (size_t i = 0; i < 2; i++)
-        {
-            for (size_t k = 0; k < 2; k++)
-            {
-                nodeInfo[n].button[k][i] = root["Button"][k][i];
-            }
-        }
-    }
-    else
-    {
-        Serial.println("Root error, no json detected!");
-    }
-
-    int i = -1;
-    //toggle led 0
-    if (strcmp(msg.c_str(), "GreenToggle") == 0)
-    {
-        i = 0;
-    }
-    //toggle led 1
-    if (strcmp(msg.c_str(), "RedToggles") == 0)
-    {
-        i = 1;
-    }
-
-    //toggle led with index i;
-    if (ledOn[i])
-        ledOn[i] = !ledOn[i];
-    else if (!ledOn[i])
-        ledOn[i] = !ledOn[i];
-
-    if (ledOn[i])
-        digitalWrite(led[i], HIGH);
-    else if (!ledOn[i])
-        digitalWrite(led[i], LOW);
 }
 
 void newConnectionCallback(uint32_t nodeId)
@@ -126,26 +79,60 @@ void loop()
     userScheduler.execute(); // it will run mesh scheduler as well
     mesh.update();
 
-    for (int i = 0; i < 2; i++)
+    if (Serial.available() > 0 && parseJson == false)
     {
-        //read button 0 and turn on/off led 0
-        if (digitalRead(button[i]) == LOW && allowButton[i])
+        Serial.println("========================Start=======================");
+        int msgIn = Serial.read();
+        Serial.print("I got: ");
+        Serial.println(msgIn, DEC);
+
+        Serial.println("========================Counter=====================");
+
+        Serial.println(counter);
+        msgSerial[counter] = msgIn;
+        if (msgSerial[counter] == '}')
         {
-            if (nodeInfo[i].button[i][0] == 1)
-            {
-                String msg = "GreenToggle";
-                mesh.sendSingle(nodeInfo[i].address, msg);
-            }
-            if (nodeInfo[i].button[i][1] == 1)
-            {
-                String msg = "RedToggle";
-                mesh.sendSingle(nodeInfo[i].address, msg);
-            }
-            allowButton[i] = !allowButton[i];
+            parseJson = true;
         }
-        else if (digitalRead(button[i]) == HIGH && !allowButton[i])
+        counter ++;
+        Serial.println("=====================msgSerial======================");
+
+        Serial.println(msgSerial[counter]);
+
+        //send this for test
+        //"{ "AddressIn": 123412, "AddressOut": 123412, "Button": [[0,0], [0,0]] }"
+    }
+
+    if (parseJson)
+    {
+        counter = 0;
+        Serial.println("=======================JSON=========================");
+        String msgOut(msgSerial);
+        Serial.println(msgOut);
+
+        DynamicJsonBuffer jsonBuffer;
+        JsonObject& root = jsonBuffer.parseObject(msgOut);
+
+        if (root.success())
         {
-            allowButton[i] = !allowButton[i];
+            Serial.println("======================SUCCES========================");
+            int addressin = root["AddressIn"];
+            int addressout = root["AddressOut"];
+            int button;
+
+            Serial.println(addressin);
+            Serial.println(addressout);
+
+            for (size_t i = 0; i < 2; i++)
+            {
+                for (size_t k = 0; k < 2; k++)
+                {
+                    button = root["Butoton"][i][k];
+                    Serial.println(button);
+                }
+            }
         }
+        Serial.println("========================End=========================\n\n\n\n");
+        parseJson = false;
     }
 }
