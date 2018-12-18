@@ -22,21 +22,17 @@ painlessMesh  mesh;
 struct NodeInfo
 {
     uint32_t address = 0;
-    int button[2][2] = { {0, 0}, {0, 0} };
+    int button[6] = {0, 0, 0, 0, 0, 0};
 };
 
-NodeInfo nodeInfo[100];
+NodeInfo nodeInfo[64];
 
 // Needed for painless library
 void receivedCallback( uint32_t from, String &msg )
 {
     Serial.printf( "startHere: Received from %u msg=%s\n", from, msg.c_str() );
     /* Json format
-    {
-    	"AddressIn": 123412,
-    	"AddressOut": 123412,
-    	"Button": [[0, 0], [0, 0]]
-    }
+    { "AddressIn": 123412, "AddressOut": 123412, "Button": [0, 0, 0, 0, 0, 0] }
     */
     Serial.println("=======================JSON=========================");
     DynamicJsonBuffer jsonBuffer;
@@ -46,19 +42,24 @@ void receivedCallback( uint32_t from, String &msg )
         Serial.println("======================SUCCES========================");
         int n = 0;
         //while loop might be dangerous because of skedular
-        while (nodeInfo[n].address != 0)
+        if (nodeInfo[n].address != root["AddressOut"])
         {
-            n++;
+            while (nodeInfo[n].address != 0)
+            {
+
+                n++;
+            }
         }
+
+        //check the value of n
+        Serial.print("n = ");
+        Serial.println(n);
 
         //bind button one to the 2 leds
         nodeInfo[n].address = root["AddressOut"];
-        for (size_t i = 0; i < 2; i++)
+        for (size_t i = 0; i < 6; i++)
         {
-            for (size_t k = 0; k < 2; k++)
-            {
-                nodeInfo[n].button[k][i] = root["Button"][k][i];
-            }
+            nodeInfo[n].button[i] = root["Button"][i];
         }
     }
     else
@@ -82,7 +83,7 @@ void receivedCallback( uint32_t from, String &msg )
             digitalWrite(led[0], LOW);
     }
     //toggle led 1
-    if (strcmp(msg.c_str(), "RedToggles") == 0)
+    if (strcmp(msg.c_str(), "RedToggle") == 0)
     {
         //toggle led with index i;
         if (ledOn[1])
@@ -142,21 +143,44 @@ void loop()
         //read button 0 and turn on/off led 0
         if (digitalRead(button[i]) == LOW && allowButton[i])
         {
-            if (nodeInfo[i].button[i][0] == 1)
+            //first button
+            if (nodeInfo[0].button[0] == 1)
             {
-                String msg = "GreenToggle";
-                mesh.sendSingle(nodeInfo[i].address, msg);
+                if (nodeInfo[0].button[1] == 1)
+                {
+                    String msg = "GreenToggle";
+                    mesh.sendSingle(nodeInfo[0].address, msg);
 
-                Serial.println(msg);
+                    Serial.println(msg);
+                }
+                if (nodeInfo[0].button[2] == 1)
+                {
+                    String msg = "RedToggle";
+                    mesh.sendSingle(nodeInfo[0].address, msg);
+
+                    Serial.println(msg);
+                }
             }
-            if (nodeInfo[i].button[i][1] == 1)
+            //second button
+            if (nodeInfo[0].button[3] == 1)
             {
-                String msg = "RedToggle";
-                mesh.sendSingle(nodeInfo[i].address, msg);
+                if (nodeInfo[0].button[4] == 1)
+                {
+                    String msg = "GreenToggle";
+                    mesh.sendSingle(nodeInfo[0].address, msg);
 
-                Serial.println(msg);
+                    Serial.println(msg);
+                }
+                if (nodeInfo[0].button[5] == 1)
+                {
+                    String msg = "RedToggle";
+                    mesh.sendSingle(nodeInfo[0].address, msg);
+
+                    Serial.println(msg);
+                }
             }
             allowButton[i] = !allowButton[i];
+
         }
         else if (digitalRead(button[i]) == HIGH && !allowButton[i])
         {

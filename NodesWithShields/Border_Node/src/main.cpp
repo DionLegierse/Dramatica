@@ -22,21 +22,12 @@ bool parseJson = false;
 Scheduler userScheduler; // to control your personal task
 painlessMesh mesh;
 
-//struct to configure inputs/outputs
-struct NodeInfo
-{
-    uint32_t address = 0;
-    int button[2][2] = { {0, 0}, {0, 0} };
-};
-
-NodeInfo nodeInfo[100];
-
 // Needed for painless library
 void receivedCallback( uint32_t from, String &msg )
 {
     Serial.printf( "startHere: Received from %u msg=%s\n", from, msg.c_str() );
     /* Json format
-    { "AddressIn": 123412, "AddressOut": 123412, "Button": [[0, 0], [0, 0]] }
+    { "AddressIn": 123412, "AddressOut": 123412, "Button": [0, 0, 0, 0, 0, 0] }
     */
 }
 
@@ -89,8 +80,9 @@ void loop()
             parseJson = true;
         }
         counter ++;
-        //Test JSON
-        // "{ "AddressIn": 123412, "AddressOut": 123412, "Button": [[1,2], [3,4]] }"
+        /* Json format
+        { "AddressIn": 123412, "AddressOut": 123412, "Button": [0, 0, 0, 0, 0, 0] }
+        */
     }
 
     if (parseJson)
@@ -115,14 +107,11 @@ void loop()
             Serial.print("AddressOut:\t");
             Serial.println(addressOut);
 
-            for (size_t i = 0; i < 2; i++)
+            for (size_t i = 0; i < 6; i++)
             {
-                for (size_t k = 0; k < 2; k++)
-                {
-                    Serial.print("Button:\t");
-                    button = root["Button"][i][k];
-                    Serial.println(button);
-                }
+                Serial.print("Button:\t");
+                button = root["Button"][i];
+                Serial.println(button);
             }
 
             mesh.sendSingle(addressIn, msgOut);
