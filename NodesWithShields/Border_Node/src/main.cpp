@@ -8,13 +8,6 @@ This code is a piece of testcode for the mesh network
 #define   MESH_PASSWORD   "somethingSneaky"
 #define   MESH_PORT       5555
 
-const int led[2]    = {D5, D6};
-const int button[2] = {D3, D2};
-const int reset     = D4;
-
-bool allowButton[2] = {true, true};
-bool ledOn[2]       = {false, false};
-
 char msgSerial[100];
 int counter = 0;
 bool parseJson = false;
@@ -49,11 +42,6 @@ void nodeTimeAdjustedCallback(int32_t offset)
 void setup()
 {
     Serial.begin(9600);
-    for (int i = 0; i < 2; i++)
-    {
-    pinMode(led[i], OUTPUT);
-    pinMode(button[i], INPUT_PULLUP);
-    }
 
     //mesh.setDebugMsgTypes( ERROR | MESH_STATUS | CONNECTION | SYNC | COMMUNICATION | GENERAL | MSG_TYPES | REMOTE ); // all types on
     mesh.setDebugMsgTypes( ERROR | STARTUP );  // set before init() so that you can see startup messages
@@ -81,7 +69,7 @@ void loop()
         }
         counter ++;
         /* Json format
-        { "AddressIn": 123412, "AddressOut": 123412, "Button": [0, 0, 0, 0, 0, 0] }
+        { "AddressIn": 123412, "AddressOut": 123412}
         */
     }
 
@@ -100,19 +88,11 @@ void loop()
             Serial.println("======================SUCCES========================");
             uint32_t addressIn = root["AddressIn"];
             uint32_t addressOut = root["AddressOut"];
-            uint32_t button;
 
             Serial.print("AddressIn:\t");
             Serial.println(addressIn);
             Serial.print("AddressOut:\t");
             Serial.println(addressOut);
-
-            for (size_t i = 0; i < 6; i++)
-            {
-                Serial.print("Button:\t");
-                button = root["Button"][i];
-                Serial.println(button);
-            }
 
             mesh.sendSingle(addressIn, msgOut);
         }

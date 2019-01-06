@@ -8,45 +8,44 @@ This code is a piece of testcode for the mesh network
 #define   MESH_PASSWORD   "somethingSneaky"
 #define   MESH_PORT       5555
 
-const int led[2]    = {D5, D6};
-const int button[2] = {D3, D2};
-const int reset     = D4;
+const int red = D6;
+const int green = D5;
+const int activeButton = D3;
+const int inactiveButton = D2;
+const int reset = D4;
 
-bool allowButton[2] = {true, true};
-bool ledOn[2]       = {false, false};
+bool redFlag = false;
+bool greenFlag = false;
+bool activeButtonFlag = true;
+bool inactiveButtonFlag = true;
 
 Scheduler userScheduler; // to control your personal task
-painlessMesh  mesh;
+painlessMesh mesh;
 
-//struct to configure inputs/outputs
-struct NodeInfo
-{
-    uint32_t address = 0;
-    int button[6] = {0, 0, 0, 0, 0, 0};
-};
-
-NodeInfo nodeInfo[64];
+uint32_t address[64];
+int size = 0;
 
 // Needed for painless library
 void receivedCallback( uint32_t from, String &msg )
 {
     Serial.printf( "startHere: Received from %u msg=%s\n", from, msg.c_str() );
+    digitalWrite(green, HIGH);
     /* Json format
-    { "AddressIn": 123412, "AddressOut": 123412, "Button": [0, 0, 0, 0, 0, 0] }
+    { "AddressIn": 123412, "AddressOut": 123412}
     */
     Serial.println("=======================JSON=========================");
     DynamicJsonBuffer jsonBuffer;
     JsonObject& root = jsonBuffer.parseObject(msg.c_str());
+
     if (root.success())
     {
         Serial.println("======================SUCCES========================");
         int n = 0;
         //while loop might be dangerous because of skedular
-        if (nodeInfo[n].address != root["AddressOut"])
+        if (address[n] != root["AddressOut"])
         {
-            while (nodeInfo[n].address != 0)
+            while (address[n] != 0)
             {
-
                 n++;
             }
         }
@@ -56,11 +55,8 @@ void receivedCallback( uint32_t from, String &msg )
         Serial.println(n);
 
         //bind button one to the 2 leds
-        nodeInfo[n].address = root["AddressOut"];
-        for (size_t i = 0; i < 6; i++)
-        {
-            nodeInfo[n].button[i] = root["Button"][i];
-        }
+        address[n] = root["AddressOut"];
+        size = n+1;
     }
     else
     {
@@ -68,33 +64,21 @@ void receivedCallback( uint32_t from, String &msg )
         Serial.println("Root error, no json detected!");
     }
 
-    Serial.println("======================BUTTONs=======================");
-    if (strcmp(msg.c_str(), "GreenToggle") == 0)
-    {
-        //toggle led with index i;
-        if (ledOn[0])
-            ledOn[0] = !ledOn[0];
-        else if (!ledOn[0])
-            ledOn[0] = !ledOn[0];
-
-        if (ledOn[0])
-            digitalWrite(led[0], HIGH);
-        else if (!ledOn[0])
-            digitalWrite(led[0], LOW);
-    }
+    Serial.println("======================Toggle=======================");
     //toggle led 1
     if (strcmp(msg.c_str(), "RedToggle") == 0)
     {
-        //toggle led with index i;
-        if (ledOn[1])
-            ledOn[1] = !ledOn[1];
-        else if (!ledOn[1])
-            ledOn[1] = !ledOn[1];
+        //toggle
+        if (redFlag)
+            redFlag = !redFlag;
+        else if (!redFlag)
+            redFlag = !redFlag;
 
-        if (ledOn[1])
-            digitalWrite(led[1], HIGH);
-        else if (!ledOn[1])
-            digitalWrite(led[1], LOW);
+        //digitalwrite
+        if (redFlag)
+            digitalWrite(red, HIGH);
+        else if (!redFlag)
+            digitalWrite(red, LOW);
     }
     Serial.println("=======================DONE=========================");
 }
@@ -117,10 +101,15 @@ void nodeTimeAdjustedCallback(int32_t offset)
 void setup()
 {
     Serial.begin(9600);
-    for (int i = 0; i < 2; i++)
+
+    pinMode(red, OUTPUT);
+    pinMode(green, OUTPUT);
+    pinMode(activeButton, INPUT_PULLUP);
+    pinMode(inactiveButton, INPUT_PULLUP);
+
+    for (uint32_t i = 0; i < 64; i++)
     {
-    pinMode(led[i], OUTPUT);
-    pinMode(button[i], INPUT_PULLUP);
+        address[i] = 0;
     }
 
     //mesh.setDebugMsgTypes( ERROR | MESH_STATUS | CONNECTION | SYNC | COMMUNICATION | GENERAL | MSG_TYPES | REMOTE ); // all types on
@@ -138,53 +127,25 @@ void loop()
     userScheduler.execute(); // it will run mesh scheduler as well
     mesh.update();
 
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i <= size; i++)
     {
         //read button 0 and turn on/off led 0
-        if (digitalRead(button[i]) == LOW && allowButton[i])
+        if (digitalRead(activeButton) == LOW && activeButtonFlag)
         {
-            //first button
-            if (nodeInfo[0].button[0] == 1)
-            {
-                if (nodeInfo[0].button[1] == 1)
-                {
-                    String msg = "GreenToggle";
-                    mesh.sendSingle(nodeInfo[0].address, msg);
+            Serial.println("ButtonPressed");
 
-                    Serial.println(msg);
-                }
-                if (nodeInfo[0].button[2] == 1)
-                {
-                    String msg = "RedToggle";
-                    mesh.sendSingle(nodeInfo[0].address, msg);
+            String msg = "RedToggle";
+            mesh.sendSingle(address[i], msg);
 
-                    Serial.println(msg);
-                }
-            }
-            //second button
-            if (nodeInfo[0].button[3] == 1)
-            {
-                if (nodeInfo[0].button[4] == 1)
-                {
-                    String msg = "GreenToggle";
-                    mesh.sendSingle(nodeInfo[0].address, msg);
+            Serial.println(msg);
 
-                    Serial.println(msg);
-                }
-                if (nodeInfo[0].button[5] == 1)
-                {
-                    String msg = "RedToggle";
-                    mesh.sendSingle(nodeInfo[0].address, msg);
-
-                    Serial.println(msg);
-                }
-            }
-            allowButton[i] = !allowButton[i];
-
+            activeButtonFlag = !activeButtonFlag;
         }
-        else if (digitalRead(button[i]) == HIGH && !allowButton[i])
+        else if (digitalRead(activeButton) == HIGH && !activeButtonFlag)
         {
-            allowButton[i] = !allowButton[i];
+            Serial.println("ButtonReleased");
+
+            activeButtonFlag = !activeButtonFlag;
         }
     }
 }
