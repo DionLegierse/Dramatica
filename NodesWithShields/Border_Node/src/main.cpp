@@ -1,5 +1,6 @@
 /*
-This code is a piece of testcode for the mesh network
+Default Json format
+{ "ADD": <address>, "CMD": <command>, "ARG": <target> }
 */
 
 #include "painlessMesh.h"
@@ -19,9 +20,6 @@ painlessMesh mesh;
 void receivedCallback( uint32_t from, String &msg )
 {
     Serial.printf( "startHere: Received from %u msg=%s\n", from, msg.c_str() );
-    /* Json format
-    { "AddressIn": 123412, "AddressOut": 123412, "Button": [0, 0, 0, 0, 0, 0] }
-    */
 }
 
 void newConnectionCallback(uint32_t nodeId)
@@ -58,6 +56,7 @@ void loop()
     userScheduler.execute(); // it will run mesh scheduler as well
     mesh.update();
 
+    //get the incomming message ready for Json parsing
     if (Serial.available() > 0 && parseJson == false)
     {
         int msgIn = Serial.read();
@@ -68,35 +67,64 @@ void loop()
             parseJson = true;
         }
         counter ++;
-        /* Json format
-        { "AddressIn": 123412, "AddressOut": 123412}
-        */
     }
 
     if (parseJson)
     {
+        Serial.println("========\n========");
         counter = 0;
-        Serial.println("=======================JSON=========================");
-        String msgOut(msgSerial);
-        Serial.println(msgOut);
+        Serial.println("JSON RECEIVED");
+        String jsonOut(msgSerial);
+        String msgOut;
+        Serial.println(jsonOut);
 
         DynamicJsonBuffer jsonBuffer;
-        JsonObject& root = jsonBuffer.parseObject(msgOut);
+        JsonObject& root = jsonBuffer.parseObject(jsonOut);
 
-        if (root.success())
+        if ( root.success() )
         {
-            Serial.println("======================SUCCES========================");
-            uint32_t addressIn = root["AddressIn"];
-            uint32_t addressOut = root["AddressOut"];
+            Serial.println("PARSE SUCCESFULL!");
+            uint32_t ADD = root["ADD"];
+            String CMD = root["CMD"];
+            String ARG = root["ARG"];
 
-            Serial.print("AddressIn:\t");
-            Serial.println(addressIn);
-            Serial.print("AddressOut:\t");
-            Serial.println(addressOut);
+            Serial.print("ADD:\t");
+            Serial.println(ADD);
+            Serial.print("CMD:\t");
+            Serial.println(CMD);
+            Serial.print("ARG:\t");
+            Serial.println(ARG);
 
-            mesh.sendSingle(addressIn, msgOut);
+            if (strcmp(root["CMD"], "L") == 0)
+            {
+                mesh.sendSingle(ADD, jsonOut);
+            }
+            else if (strcmp(root["CMD"], "T") == 0)
+            {
+                msgOut = "T";
+                mesh.sendSingle(ADD, msgOut);
+            }
+            else if (strcmp(root["CMD"], "ON") == 0)
+            {
+                msgOut = "ON";
+                mesh.sendSingle(ADD, msgOut);
+            }
+            else if (strcmp(root["CMD"], "OFF") == 0)
+            {
+                msgOut = "OFF";
+                mesh.sendSingle(ADD, msgOut);
+            }
+            else if (strcmp(root["CMD"], "G") == 0)
+            {
+                mesh.sendSingle(ADD, jsonOut);
+            }
+            else
+            {
+                Serial.println("Error no command found");
+            }
         }
-        Serial.println("========================End=========================\n\n\n\n");
         parseJson = false;
+        Serial.println("END OF SENDING...");
+        Serial.println("========\n========");
     }
 }

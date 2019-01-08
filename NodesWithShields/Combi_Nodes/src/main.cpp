@@ -1,86 +1,146 @@
 /*
-This code is a piece of testcode for the mesh network
+Default Json format
+{
+    "ADD": <address>,
+    "CMD": <command>,
+    "ARG": <target>
+}
 */
 
 #include "painlessMesh.h"
+#include <EEPROM.h>
 
-#define   MESH_PREFIX     "whateverYouLike"
-#define   MESH_PASSWORD   "somethingSneaky"
-#define   MESH_PORT       5555
+#define MESH_PORT       5555
 
+//variables for the eeprom and the network
+struct
+{
+    String name = "node";
+    String ssid = "whateverYouLike";
+    String password = "somethingSneaky";
+    uint8_t group = 0;
+    uint32_t address[64];
+    uint8_t size = 0;
+} data;
+
+//eeprom addresses
+unsigned int eepromAddress = 0;
+
+//states for the node
+enum STATE {CONNECT, MESH};
+STATE state = MESH;
+
+//In and Outputs
 const int red = D6;
 const int green = D5;
 const int activeButton = D3;
-const int inactiveButton = D2;
-const int reset = D4;
+const int connectButton = D2;
+const int resetButton = D4;
 
+//Flags
 bool redFlag = false;
 bool greenFlag = false;
 bool activeButtonFlag = true;
-bool inactiveButtonFlag = true;
+bool connectButtonFlag = true;
+bool setupFlag = true;
 
-Scheduler userScheduler; // to control your personal task
+//schedular and mesh
+Scheduler userScheduler;
 painlessMesh mesh;
 
-uint32_t address[64];
-int size = 0;
+void toggleLed()
+{
+    //toggle
+    if (redFlag)
+        redFlag = !redFlag;
+    else if (!redFlag)
+        redFlag = !redFlag;
+
+    //digitalwrite
+    if (redFlag)
+        digitalWrite(red, HIGH);
+    else if (!redFlag)
+        digitalWrite(red, LOW);
+}
+
+void setupNodeCallback( uint32_t from, String &msg )
+{
+    Serial.printf( "newConnectionCallback()" );
+}
 
 // Needed for painless library
-void receivedCallback( uint32_t from, String &msg )
+void normalCallback( uint32_t from, String &msg )
 {
-    Serial.printf( "startHere: Received from %u msg=%s\n", from, msg.c_str() );
+    Serial.println( "normalCallback()" );
+    Serial.println( msg.c_str() );
     digitalWrite(green, HIGH);
-    /* Json format
-    { "AddressIn": 123412, "AddressOut": 123412}
-    */
-    Serial.println("=======================JSON=========================");
+
+    Serial.println("Parsing...");
     DynamicJsonBuffer jsonBuffer;
     JsonObject& root = jsonBuffer.parseObject(msg.c_str());
 
     if (root.success())
     {
-        Serial.println("======================SUCCES========================");
-        int n = 0;
-        //while loop might be dangerous because of skedular
-        if (address[n] != root["AddressOut"])
+        Serial.println("Json Parse succesfull!");
+
+        if (strcmp(root["CMD"], "L") == 0)
         {
-            while (address[n] != 0)
+            unsigned int n = 0;
+            //while loop might be dangerous because of skedular
+            if (data.address[n] != root["ARG"])
             {
-                n++;
+                while (data.address[n] != 0)
+                {
+                    n++;
+                }
+                data.size = n + 1;
             }
+
+            data.address[n] = root["ARG"];
+
+            //debugging
+            Serial.print("n = ");
+            Serial.println(n);
+            Serial.print("size = ");
+            Serial.println(data.size);
         }
-
-        //check the value of n
-        Serial.print("n = ");
-        Serial.println(n);
-
-        //bind button one to the 2 leds
-        address[n] = root["AddressOut"];
-        size = n+1;
+        else if (strcmp(root["CMD"], "G") == 0)
+        {
+            data.group = root["ARG"];
+        }
+        else
+        {
+            Serial.println("Error no command found: yes Json");
+        }
     }
     else
     {
         //give an error if the root didn't parse
-        Serial.println("Root error, no json detected!");
+        Serial.println("No Json to parse");
+
+        if (strcmp(msg.c_str(), "T") == 0)
+        {
+            toggleLed();
+        }
+        else if (strcmp(msg.c_str(), "ON") == 0)
+        {
+            if (!redFlag)
+                toggleLed();
+        }
+        else if (strcmp(msg.c_str(), "OFF") == 0)
+        {
+            if (redFlag)
+                toggleLed();
+        }
+        else
+        {
+            Serial.println("Error no command found: no Json");
+        }
     }
 
-    Serial.println("======================Toggle=======================");
-    //toggle led 1
-    if (strcmp(msg.c_str(), "RedToggle") == 0)
-    {
-        //toggle
-        if (redFlag)
-            redFlag = !redFlag;
-        else if (!redFlag)
-            redFlag = !redFlag;
-
-        //digitalwrite
-        if (redFlag)
-            digitalWrite(red, HIGH);
-        else if (!redFlag)
-            digitalWrite(red, LOW);
-    }
-    Serial.println("=======================DONE=========================");
+    EEPROM.put(eepromAddress, data);
+    EEPROM.commit();
+    Serial.println("Done receiving...");
 }
 
 void newConnectionCallback(uint32_t nodeId)
@@ -90,7 +150,7 @@ void newConnectionCallback(uint32_t nodeId)
 
 void changedConnectionCallback()
 {
-    Serial.printf("Changed connections %s\n",mesh.subConnectionJson().c_str());
+    Serial.printf("Changed connections %s\n", mesh.subConnectionJson().c_str());
 }
 
 void nodeTimeAdjustedCallback(int32_t offset)
@@ -100,23 +160,19 @@ void nodeTimeAdjustedCallback(int32_t offset)
 
 void setup()
 {
+    EEPROM.begin(512);
     Serial.begin(9600);
 
     pinMode(red, OUTPUT);
     pinMode(green, OUTPUT);
     pinMode(activeButton, INPUT_PULLUP);
-    pinMode(inactiveButton, INPUT_PULLUP);
-
-    for (uint32_t i = 0; i < 64; i++)
-    {
-        address[i] = 0;
-    }
+    pinMode(connectButton, INPUT_PULLUP);
 
     //mesh.setDebugMsgTypes( ERROR | MESH_STATUS | CONNECTION | SYNC | COMMUNICATION | GENERAL | MSG_TYPES | REMOTE ); // all types on
     mesh.setDebugMsgTypes( ERROR | STARTUP );  // set before init() so that you can see startup messages
 
-    mesh.init( MESH_PREFIX, MESH_PASSWORD, &userScheduler, MESH_PORT );
-    mesh.onReceive(&receivedCallback);
+    mesh.init( data.ssid, data.password, &userScheduler, MESH_PORT );
+    mesh.onReceive(&normalCallback);
     mesh.onNewConnection(&newConnectionCallback);
     mesh.onChangedConnections(&changedConnectionCallback);
     mesh.onNodeTimeAdjusted(&nodeTimeAdjustedCallback);
@@ -124,28 +180,82 @@ void setup()
 
 void loop()
 {
-    userScheduler.execute(); // it will run mesh scheduler as well
-    mesh.update();
 
-    for (int i = 0; i <= size; i++)
+    if (digitalRead(connectButton) == LOW)
     {
-        //read button 0 and turn on/off led 0
-        if (digitalRead(activeButton) == LOW && activeButtonFlag)
+        state = CONNECT;
+    }
+
+    if (state == CONNECT)
+    {
+        if (setupFlag)
         {
-            Serial.println("ButtonPressed");
+            setupFlag = !setupFlag;
+            mesh.setDebugMsgTypes( ERROR | STARTUP );  // set before init() so that you can see startup messages
 
-            String msg = "RedToggle";
-            mesh.sendSingle(address[i], msg);
-
-            Serial.println(msg);
-
-            activeButtonFlag = !activeButtonFlag;
+            mesh.init( "admin", "admin", &userScheduler, MESH_PORT );
+            mesh.onReceive(&setupNodeCallback);
+            mesh.onNewConnection(&newConnectionCallback);
+            mesh.onChangedConnections(&changedConnectionCallback);
+            mesh.onNodeTimeAdjusted(&nodeTimeAdjustedCallback);
         }
-        else if (digitalRead(activeButton) == HIGH && !activeButtonFlag)
+
+        userScheduler.execute(); // it will run mesh scheduler as well
+        mesh.update();
+
+        state = MESH;
+    }
+
+
+    if (state == MESH)
+    {
+        userScheduler.execute(); // it will run mesh scheduler as well
+        mesh.update();
+
+        for (unsigned int i = 0; i < 64; i++)
         {
-            Serial.println("ButtonReleased");
+            //read button 0 and turn on/off led 0
+            if (digitalRead(activeButton) == LOW && activeButtonFlag)
+            {
+                Serial.println("ButtonPressed");
 
-            activeButtonFlag = !activeButtonFlag;
+                /*
+                String msg = "RedToggle";
+                mesh.sendSingle(data.address[i], msg);
+
+                Serial.println(msg);
+
+                activeButtonFlag = !activeButtonFlag;
+                */
+
+                EEPROM.get(eepromAddress, data);
+                Serial.printf("Group: ");
+                Serial.println(data.group);
+                Serial.printf("name: ");
+                Serial.println(data.name);
+                Serial.printf("ssid: ");
+                Serial.println(data.ssid);
+                Serial.printf("password: ");
+                Serial.println(data.password);
+
+                for (size_t i = 0; i < data.size; i++)
+                {
+                    Serial.printf("address[%d]: ", i);
+                    Serial.println(data.address[i]);
+                }
+            }
+            else if (digitalRead(activeButton) == HIGH && !activeButtonFlag)
+            {
+                Serial.println("ButtonReleased");
+
+                activeButtonFlag = !activeButtonFlag;
+            }
         }
+    }
+
+    if (eepromAddress == EEPROM.length())
+    {
+        eepromAddress = 0;
+        printf("%d", EEPROM.length());
     }
 }
