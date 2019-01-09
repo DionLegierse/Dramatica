@@ -5,7 +5,7 @@ function goBackHome(){
 function sendHTTPRequest() {
     console.log("Attempting to send request");
     var xmlHttp = new XMLHttpRequest();
-    xmlHttp.open( "GET", "http://192.168.11.14:3000?message=ProjectDomotica", true );
+    xmlHttp.open( "GET", "http://127.0.0.1:3000?message=Hello_World!", true );
     xmlHttp.send( null );
     console.log(xmlHttp.responseText);
 }
