@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <link rel="stylesheet" href="../style.css" type="text/css">
+    <script type="text/javascript" src="grouppage.js"></script>
+</head>
+
+<body>
+<div id="body-container">
+    <div class="menu-container">
+        <div class="button-container">
+            <button class="button-switch">On</button>
+            <button class="button-switch">Off</button>
+        </div>
+        
+        <br>
+
+        <div id="groups" class="button-container"></div>
+        <button class="button-back" onclick="goBack();"> Close </button>
+    </div>
+</div>
+</body>
+</html>
+
+<script>
+    document.getElementById("groups").appendChild(fetchList(json));
+</script>
