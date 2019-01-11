@@ -10,9 +10,9 @@ app.get('/', (req, res) => {
 
     if( req.query.message == 'list' )
     {
-        var response = {'nodes':[ {'id': '01', 'group': 'una'},
-                                  {'id': '02', 'group': 'una'},
-                                  {'id': '03', 'group': 'una'}]}
+        var response = [{'id': '01', 'group': 'una'},
+                        {'id': '02', 'group': 'una'},
+                        {'id': '03', 'group': 'kit'}]
     }
     res.setHeader('Content-Type', 'application/json');
     res.send(JSON.stringify(response));

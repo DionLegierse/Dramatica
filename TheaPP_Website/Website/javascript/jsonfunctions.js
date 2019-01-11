@@ -3,7 +3,6 @@ var nodes;
 function fetchList()
 {
     sendHTTPRequest("list");
-    //nodes = JSON.parse(jsonRequested);
 }
 
 
@@ -26,7 +25,6 @@ function sendHTTPRequest(message)
     xhr.onload = function() {
         var text = xhr.responseText;
         nodes = JSON.parse(text);
-        console.log(nodes);
     };
 
     xhr.onerror = function() {
@@ -39,10 +37,9 @@ function sendHTTPRequest(message)
 function createCORSRequest(method, url)
 {
     var xhr = new XMLHttpRequest();
-    if("withCredentials" in xhr)
-    {
+    if("withCredentials" in xhr) {
         // XHR for Chrome/Firefox/Opera/Safari.
-        xhr.open(method, url, true);
+        xhr.open(method, url, false);
     } else if (typeof XDomainRequest != "undefined") {
         // XDomainRequest for Internet Explorer
         xhr = new XDomainRequest();
@@ -51,5 +48,8 @@ function createCORSRequest(method, url)
         // CORS is not supported
         xhr = null;
     }
+
+
+
     return xhr;
 }

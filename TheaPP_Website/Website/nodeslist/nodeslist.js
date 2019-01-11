@@ -1,7 +1,9 @@
-function goBackHome() {
+function goBackHome()
+{
     location.href = "../index.html";
 }
 
-function goToGroup() {
-    location.href = "../grouppage/grouppage.html";
+function goToGroup(group)
+{
+    location.href = "../grouppage/grouppage.html?group=" + group;
 }

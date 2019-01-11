@@ -3,21 +3,21 @@
 <head>
     <title></title>
     <link rel="stylesheet" href="../style.css" type="text/css">
-    <script type="text/javascript" src="grouppage.js"></script>
     <script type="text/javascript" src="../javascript/jsonfunctions.js"></script>
+    <script type="text/javascript" src="grouppage.js"></script>
 </head>
 
 <body>
 <div id="body-container">
     <div class="menu-container">
         <div class="button-container">
-            <button class="button-switch">On</button>
+            <button class="button-switch" onclick="debugNodes()">On</button>
             <button class="button-switch">Off</button>
         </div>
 
         <br>
 
-        <div id="groups" class="button-container"></div>
+        <div id="nodes" class="button-container"></div>
 
         <div class="button-container">
             <button class="button-back" onclick="goBack();"> Close </button>
@@ -28,5 +28,5 @@
 </html>
 
 <script>
-        fetchList();
+    listNodes();
 </script>
