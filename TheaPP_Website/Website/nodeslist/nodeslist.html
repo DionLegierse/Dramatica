@@ -3,15 +3,14 @@
 <head>
     <title></title>
     <link rel="stylesheet" href="../style.css" type="text/css">
+    <script type="text/javascript" src="../javascript/jsonfunctions.js"></script>
     <script type="text/javascript" src="nodeslist.js"></script>
 </head>
 
 <body>
 <div id="body-container">
     <div class="menu-container">
-        <div class="button-container">
-            <button class="button-one" onclick="goToGroup('una')"> Unassigned </button>
-        </div>
+        <div id="groups" class="button-container"></div>
 
         <div class="button-container">
             <button class="button-back" onclick="goBackHome();"> Close </button>
@@ -20,3 +19,7 @@
 </div>
 </body>
 </html>
+
+<script>
+    listGroups();
+</script>

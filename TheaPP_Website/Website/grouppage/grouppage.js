@@ -29,35 +29,19 @@ function listNodes()
     for( var i = 0; i < nodes.length; i++ )
     {
         var node = nodes[i];
-        if(node.group == "una")
+        if(node.group == group)
         {
             var but = document.createElement('button');
             but.appendChild(document.createTextNode(node.id));
             but.setAttribute("class", "button-one");
+            but.setAttribute("onclick", "goToNode('" + node.id + "')")
             nodeList.appendChild(but);
         }
     }
     document.getElementById("nodes").appendChild(nodeList)
 }
 
-function debugNodes()
+function goToNode( node )
 {
-    console.log(nodes);
+    location.href = "../nodepage/nodepage.html?node=" + node + "&group=" + group;
 }
-
-/*
-document.getElementById("groups").appendChild(fetchList(json));
-
-function fetchList()
-{
-    var buttonList = document.createElement('div');
-    for( var i = 0; i < Object.keys(json).length; i++ )
-    {
-        var but = document.createElement('button');
-        but.appendChild(document.createTextNode(Object.values(json)[i]));
-        but.setAttribute("class", "button-one");
-        buttonList.appendChild(but);
-    }
-    return buttonList;
-}
-*/
