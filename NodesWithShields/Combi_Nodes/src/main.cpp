@@ -10,39 +10,34 @@ Default Json format
 #include "painlessMesh.h"
 #include <EEPROM.h>
 
-#define MESH_PORT       5555
+#define     MESH_PORT       5555
+#define     MESH_PREFIX     "whateverYouLike"
+#define     MESH_PASSWORD   "somethingSneaky"
+#define     EEPROM_ADDRESS  0
 
 //variables for the eeprom and the network
 struct
 {
     String name = "node";
-    String ssid = "whateverYouLike";
-    String password = "somethingSneaky";
     uint8_t group = 0;
     uint32_t address[64];
-    uint8_t size = 0;
+    uint8_t size = 1;
+
 } data;
-
-//eeprom addresses
-unsigned int eepromAddress = 0;
-
-//states for the node
-enum STATE {CONNECT, MESH};
-STATE state = MESH;
 
 //In and Outputs
 const int red = D6;
 const int green = D5;
-const int activeButton = D3;
-const int connectButton = D2;
+const int sendButton = D3;
+const int onButton = D2;
 const int resetButton = D4;
 
 //Flags
 bool redFlag = false;
 bool greenFlag = false;
-bool activeButtonFlag = true;
-bool connectButtonFlag = true;
-bool setupFlag = true;
+bool sendButtonFlag = true;
+bool onButtonFlag = true;
+bool resetFlag = true;
 
 //schedular and mesh
 Scheduler userScheduler;
@@ -63,6 +58,26 @@ void toggleLed()
         digitalWrite(red, LOW);
 }
 
+void showEEPROM()
+{
+    EEPROM.get(EEPROM_ADDRESS, data);
+    Serial.println("========");
+    Serial.printf("Group: ");
+    Serial.println(data.group);
+    Serial.printf("name: ");
+    Serial.println(data.name);
+    Serial.printf("size: ");
+    Serial.println(data.size);
+
+    for (size_t i = 0; i < data.size; i++)
+    {
+        Serial.printf("address[%d]: ", i);
+        Serial.println(data.address[i]);
+    }
+    Serial.println("========");
+}
+
+
 void setupNodeCallback( uint32_t from, String &msg )
 {
     Serial.printf( "newConnectionCallback()" );
@@ -71,6 +86,7 @@ void setupNodeCallback( uint32_t from, String &msg )
 // Needed for painless library
 void normalCallback( uint32_t from, String &msg )
 {
+    Serial.println("========");
     Serial.println( "normalCallback()" );
     Serial.println( msg.c_str() );
     digitalWrite(green, HIGH);
@@ -85,24 +101,27 @@ void normalCallback( uint32_t from, String &msg )
 
         if (strcmp(root["CMD"], "L") == 0)
         {
-            unsigned int n = 0;
-            //while loop might be dangerous because of skedular
-            if (data.address[n] != root["ARG"])
+            uint n = 0;
+            bool go = true;
+
+            while (go)
             {
-                while (data.address[n] != 0)
+                if (data.address[n] == root["ARG"])
+                {
+                    data.address[n] = root["ARG"];
+                    go = false;
+                }
+                else if(data.address[n] == 0)
+                {
+                    data.address[n] = root["ARG"];
+                    go = false;
+                }
+                else
                 {
                     n++;
                 }
-                data.size = n + 1;
             }
-
-            data.address[n] = root["ARG"];
-
-            //debugging
-            Serial.print("n = ");
-            Serial.println(n);
-            Serial.print("size = ");
-            Serial.println(data.size);
+            data.size = n + 1;
         }
         else if (strcmp(root["CMD"], "G") == 0)
         {
@@ -138,9 +157,13 @@ void normalCallback( uint32_t from, String &msg )
         }
     }
 
-    EEPROM.put(eepromAddress, data);
+    EEPROM.put(EEPROM_ADDRESS, data);
     EEPROM.commit();
+
+    showEEPROM();
+
     Serial.println("Done receiving...");
+    Serial.println("========");
 }
 
 void newConnectionCallback(uint32_t nodeId)
@@ -160,102 +183,67 @@ void nodeTimeAdjustedCallback(int32_t offset)
 
 void setup()
 {
-    EEPROM.begin(512);
     Serial.begin(9600);
+    EEPROM.begin(1024);
 
     pinMode(red, OUTPUT);
     pinMode(green, OUTPUT);
-    pinMode(activeButton, INPUT_PULLUP);
-    pinMode(connectButton, INPUT_PULLUP);
+    pinMode(onButton, INPUT_PULLUP);
+    pinMode(sendButton, INPUT_PULLUP);
+    pinMode(resetButton, INPUT_PULLUP);
 
     //mesh.setDebugMsgTypes( ERROR | MESH_STATUS | CONNECTION | SYNC | COMMUNICATION | GENERAL | MSG_TYPES | REMOTE ); // all types on
     mesh.setDebugMsgTypes( ERROR | STARTUP );  // set before init() so that you can see startup messages
 
-    mesh.init( data.ssid, data.password, &userScheduler, MESH_PORT );
+    mesh.init( MESH_PREFIX, MESH_PASSWORD, &userScheduler, MESH_PORT );
     mesh.onReceive(&normalCallback);
     mesh.onNewConnection(&newConnectionCallback);
     mesh.onChangedConnections(&changedConnectionCallback);
     mesh.onNodeTimeAdjusted(&nodeTimeAdjustedCallback);
+
+    Serial.println("CombiNode");
 }
 
 void loop()
 {
+    userScheduler.execute(); // it will run mesh scheduler as well
+    mesh.update();
 
-    if (digitalRead(connectButton) == LOW)
+    //read button 0 and turn on/off led 0
+    if (digitalRead(sendButton) == LOW && sendButtonFlag)
     {
-        state = CONNECT;
-    }
+        Serial.println("========");
+        Serial.println("sendButton");
 
-    if (state == CONNECT)
-    {
-        if (setupFlag)
+        sendButtonFlag = !sendButtonFlag;
+
+        for (unsigned int i = 0; i < data.size; i++)
         {
-            setupFlag = !setupFlag;
-            mesh.setDebugMsgTypes( ERROR | STARTUP );  // set before init() so that you can see startup messages
+            String msg = "T";
+            mesh.sendSingle(data.address[i], msg);
 
-            mesh.init( "admin", "admin", &userScheduler, MESH_PORT );
-            mesh.onReceive(&setupNodeCallback);
-            mesh.onNewConnection(&newConnectionCallback);
-            mesh.onChangedConnections(&changedConnectionCallback);
-            mesh.onNodeTimeAdjusted(&nodeTimeAdjustedCallback);
-        }
-
-        userScheduler.execute(); // it will run mesh scheduler as well
-        mesh.update();
-
-        state = MESH;
-    }
-
-
-    if (state == MESH)
-    {
-        userScheduler.execute(); // it will run mesh scheduler as well
-        mesh.update();
-
-        for (unsigned int i = 0; i < 64; i++)
-        {
-            //read button 0 and turn on/off led 0
-            if (digitalRead(activeButton) == LOW && activeButtonFlag)
-            {
-                Serial.println("ButtonPressed");
-
-                /*
-                String msg = "RedToggle";
-                mesh.sendSingle(data.address[i], msg);
-
-                Serial.println(msg);
-
-                activeButtonFlag = !activeButtonFlag;
-                */
-
-                EEPROM.get(eepromAddress, data);
-                Serial.printf("Group: ");
-                Serial.println(data.group);
-                Serial.printf("name: ");
-                Serial.println(data.name);
-                Serial.printf("ssid: ");
-                Serial.println(data.ssid);
-                Serial.printf("password: ");
-                Serial.println(data.password);
-
-                for (size_t i = 0; i < data.size; i++)
-                {
-                    Serial.printf("address[%d]: ", i);
-                    Serial.println(data.address[i]);
-                }
-            }
-            else if (digitalRead(activeButton) == HIGH && !activeButtonFlag)
-            {
-                Serial.println("ButtonReleased");
-
-                activeButtonFlag = !activeButtonFlag;
-            }
+            Serial.println(msg);
         }
     }
-
-    if (eepromAddress == EEPROM.length())
+    else if (digitalRead(sendButton) == HIGH && !sendButtonFlag)
     {
-        eepromAddress = 0;
-        printf("%d", EEPROM.length());
+        Serial.println("nendButton");
+
+        sendButtonFlag = !sendButtonFlag;
+        Serial.println("========");
+    }
+
+    if (digitalRead(onButton) == LOW && onButtonFlag)
+    {
+        Serial.println("========");
+        onButtonFlag = !onButtonFlag;
+        Serial.println("onButton");
+        showEEPROM();
+    }
+    else if (digitalRead(onButton) == HIGH && !onButtonFlag)
+    {
+        onButtonFlag = !onButtonFlag;
+        Serial.println("nonButton");
+        Serial.println("========");
     }
 }

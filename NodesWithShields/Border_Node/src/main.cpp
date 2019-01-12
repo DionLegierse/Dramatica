@@ -49,6 +49,8 @@ void setup()
     mesh.onNewConnection(&newConnectionCallback);
     mesh.onChangedConnections(&changedConnectionCallback);
     mesh.onNodeTimeAdjusted(&nodeTimeAdjustedCallback);
+    
+    Serial.println("BorderNode");
 }
 
 void loop()
@@ -71,7 +73,7 @@ void loop()
 
     if (parseJson)
     {
-        Serial.println("========\n========");
+        Serial.println("========");
         counter = 0;
         Serial.println("JSON RECEIVED");
         String jsonOut(msgSerial);
@@ -125,6 +127,6 @@ void loop()
         }
         parseJson = false;
         Serial.println("END OF SENDING...");
-        Serial.println("========\n========");
+        Serial.println("========");
     }
 }
