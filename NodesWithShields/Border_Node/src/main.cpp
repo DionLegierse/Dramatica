@@ -13,6 +13,11 @@ char msgSerial[100];
 int counter = 0;
 bool parseJson = false;
 
+String bridgeJson[64];
+uint8_t nodeAmount;
+uint8_t nodeCount;
+bool getNodeInfo = false;
+
 Scheduler userScheduler; // to control your personal task
 painlessMesh mesh;
 
@@ -20,6 +25,9 @@ painlessMesh mesh;
 void receivedCallback( uint32_t from, String &msg )
 {
     Serial.printf( "startHere: Received from %u msg=%s\n", from, msg.c_str() );
+    Serial.println();
+    bridgeJson[nodeCount] = msg;
+    nodeCount++;
 }
 
 void newConnectionCallback(uint32_t nodeId)
@@ -120,13 +128,46 @@ void loop()
             {
                 mesh.sendSingle(ADD, jsonOut);
             }
+            else if (strcmp(root["CMD"], "GET") == 0)
+            {
+                msgOut = "GET";
+
+                std::list<uint32_t> temp = mesh.getNodeList();
+                for (uint32_t i : temp)
+                {
+                    mesh.sendSingle(i, msgOut);
+                    Serial.println(i);
+                    nodeAmount++;
+                }
+                getNodeInfo = true;
+            }
             else
             {
                 Serial.println("Error no command found");
             }
         }
         parseJson = false;
+
         Serial.println("END OF SENDING...");
         Serial.println("========");
+    }
+
+    if (nodeCount == nodeAmount && getNodeInfo)
+    {
+        String toBridge = "[{";
+
+        for (size_t i = 0; i < nodeAmount; i++)
+        {
+            toBridge += bridgeJson[i] + ", ";
+        }
+
+        toBridge += "}]";
+
+        Serial.println(toBridge);
+
+        nodeCount = 0;
+        nodeAmount = 0;
+
+        getNodeInfo = false;
     }
 }

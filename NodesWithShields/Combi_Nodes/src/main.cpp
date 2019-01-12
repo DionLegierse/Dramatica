@@ -14,7 +14,7 @@ Default Json format
 //variables for the eeprom
 struct
 {
-    String name = "node";
+    uint32_t ID = 123;
     uint8_t group = 0;
     uint32_t address[64];
     uint8_t size = 1;
@@ -71,7 +71,7 @@ void updateLeds()
         digitalWrite(green, LOW);
 }
 
-void callback(String msg)
+void callback(String msg, uint32_t from)
 {
     Serial.println("Parsing...");
     DynamicJsonBuffer jsonBuffer;
@@ -133,6 +133,19 @@ void callback(String msg)
             if (redFlag)
                 toggleRedLed();
         }
+        else if (strcmp(msg.c_str(), "GET") == 0)
+        {
+            String jsonMsg;
+            jsonMsg = "{ \"ID\": ";
+            jsonMsg += data.ID;
+            jsonMsg += ", \"Address\": ";
+            jsonMsg += mesh.getNodeId();
+            jsonMsg += ", \"Group\": ";
+            jsonMsg += data.group;
+            jsonMsg += " }";
+            Serial.println(jsonMsg);
+            mesh.sendSingle(from, jsonMsg);
+        }
         else
         {
             Serial.println("Error no command found: no Json");
@@ -147,8 +160,8 @@ void showEEPROM()
     Serial.println("========");
     Serial.printf("Group: ");
     Serial.println(data.group);
-    Serial.printf("name: ");
-    Serial.println(data.name);
+    Serial.printf("ID: ");
+    Serial.println(data.ID);
     Serial.printf("size: ");
     Serial.println(data.size);
 
@@ -218,7 +231,7 @@ void normalCallback( uint32_t from, String &msg )
     Serial.println( "normalCallback()" );
     digitalWrite(green, HIGH);
 
-    callback(msg);
+    callback(msg, from);
 
     writeEEPROM();
 
