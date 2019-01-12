@@ -49,7 +49,7 @@ void setup()
     mesh.onNewConnection(&newConnectionCallback);
     mesh.onChangedConnections(&changedConnectionCallback);
     mesh.onNodeTimeAdjusted(&nodeTimeAdjustedCallback);
-    
+
     Serial.println("BorderNode");
 }
 

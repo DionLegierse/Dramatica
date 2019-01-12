@@ -1,10 +1,6 @@
 /*
 Default Json format
-{
-    "ADD": <address>,
-    "CMD": <command>,
-    "ARG": <target>
-}
+{ "ADD": <address>, "CMD": <command>, "ARG": <target> }
 */
 
 #include "painlessMesh.h"
@@ -15,14 +11,13 @@ Default Json format
 #define     MESH_PASSWORD   "somethingSneaky"
 #define     EEPROM_ADDRESS  0
 
-//variables for the eeprom and the network
+//variables for the eeprom
 struct
 {
     String name = "node";
     uint8_t group = 0;
     uint32_t address[64];
     uint8_t size = 1;
-
 } data;
 
 //In and Outputs
@@ -43,54 +38,41 @@ bool resetFlag = true;
 Scheduler userScheduler;
 painlessMesh mesh;
 
-void toggleLed()
+void toggleRedLed()
 {
     //toggle
     if (redFlag)
         redFlag = !redFlag;
     else if (!redFlag)
         redFlag = !redFlag;
+}
 
+void toggleGreenLed()
+{
+    //toggle
+    if (greenFlag)
+        greenFlag = !greenFlag;
+    else if (!greenFlag)
+        greenFlag = !greenFlag;
+}
+
+void updateLeds()
+{
     //digitalwrite
     if (redFlag)
         digitalWrite(red, HIGH);
     else if (!redFlag)
         digitalWrite(red, LOW);
+
+    //digitalwrite
+    if (greenFlag)
+        digitalWrite(green, HIGH);
+    else if (!greenFlag)
+        digitalWrite(green, LOW);
 }
 
-void showEEPROM()
+void callback(String msg)
 {
-    EEPROM.get(EEPROM_ADDRESS, data);
-    Serial.println("========");
-    Serial.printf("Group: ");
-    Serial.println(data.group);
-    Serial.printf("name: ");
-    Serial.println(data.name);
-    Serial.printf("size: ");
-    Serial.println(data.size);
-
-    for (size_t i = 0; i < data.size; i++)
-    {
-        Serial.printf("address[%d]: ", i);
-        Serial.println(data.address[i]);
-    }
-    Serial.println("========");
-}
-
-
-void setupNodeCallback( uint32_t from, String &msg )
-{
-    Serial.printf( "newConnectionCallback()" );
-}
-
-// Needed for painless library
-void normalCallback( uint32_t from, String &msg )
-{
-    Serial.println("========");
-    Serial.println( "normalCallback()" );
-    Serial.println( msg.c_str() );
-    digitalWrite(green, HIGH);
-
     Serial.println("Parsing...");
     DynamicJsonBuffer jsonBuffer;
     JsonObject& root = jsonBuffer.parseObject(msg.c_str());
@@ -139,26 +121,106 @@ void normalCallback( uint32_t from, String &msg )
 
         if (strcmp(msg.c_str(), "T") == 0)
         {
-            toggleLed();
+            toggleRedLed();
         }
         else if (strcmp(msg.c_str(), "ON") == 0)
         {
             if (!redFlag)
-                toggleLed();
+                toggleRedLed();
         }
         else if (strcmp(msg.c_str(), "OFF") == 0)
         {
             if (redFlag)
-                toggleLed();
+                toggleRedLed();
         }
         else
         {
             Serial.println("Error no command found: no Json");
         }
     }
+}
 
+//EEPROM functions
+void showEEPROM()
+{
+    EEPROM.get(EEPROM_ADDRESS, data);
+    Serial.println("========");
+    Serial.printf("Group: ");
+    Serial.println(data.group);
+    Serial.printf("name: ");
+    Serial.println(data.name);
+    Serial.printf("size: ");
+    Serial.println(data.size);
+
+    for (size_t i = 0; i < data.size; i++)
+    {
+        Serial.printf("address[%d]: ", i);
+        Serial.println(data.address[i]);
+    }
+    Serial.println("========");
+}
+
+void writeEEPROM()
+{
     EEPROM.put(EEPROM_ADDRESS, data);
     EEPROM.commit();
+}
+
+//Button Functions
+void sendButtonFunction()
+{
+    //read button 0 and turn on/off led 0
+    if (digitalRead(sendButton) == LOW && sendButtonFlag)
+    {
+        Serial.println("========");
+        Serial.println("sendButton");
+
+        sendButtonFlag = !sendButtonFlag;
+
+        for (unsigned int i = 0; i < data.size; i++)
+        {
+            String msg = "T";
+            mesh.sendSingle(data.address[i], msg);
+
+            Serial.println(msg);
+        }
+    }
+    else if (digitalRead(sendButton) == HIGH && !sendButtonFlag)
+    {
+        Serial.println("nendButton");
+
+        sendButtonFlag = !sendButtonFlag;
+        Serial.println("========");
+    }
+}
+
+void onButtonFunction()
+{
+    if (digitalRead(onButton) == LOW && onButtonFlag)
+    {
+        Serial.println("========");
+        onButtonFlag = !onButtonFlag;
+        Serial.println("onButton");
+        showEEPROM();
+    }
+    else if (digitalRead(onButton) == HIGH && !onButtonFlag)
+    {
+        onButtonFlag = !onButtonFlag;
+        Serial.println("nonButton");
+        Serial.println("========");
+    }
+}
+
+//painlessmesh main
+void normalCallback( uint32_t from, String &msg )
+{
+    Serial.println("========");
+    Serial.println( "normalCallback()" );
+    digitalWrite(green, HIGH);
+
+    callback(msg);
+
+    writeEEPROM();
 
     showEEPROM();
 
@@ -206,44 +268,11 @@ void setup()
 
 void loop()
 {
-    userScheduler.execute(); // it will run mesh scheduler as well
+    userScheduler.execute();
     mesh.update();
 
-    //read button 0 and turn on/off led 0
-    if (digitalRead(sendButton) == LOW && sendButtonFlag)
-    {
-        Serial.println("========");
-        Serial.println("sendButton");
+    onButtonFunction();
+    sendButtonFunction();
 
-        sendButtonFlag = !sendButtonFlag;
-
-        for (unsigned int i = 0; i < data.size; i++)
-        {
-            String msg = "T";
-            mesh.sendSingle(data.address[i], msg);
-
-            Serial.println(msg);
-        }
-    }
-    else if (digitalRead(sendButton) == HIGH && !sendButtonFlag)
-    {
-        Serial.println("nendButton");
-
-        sendButtonFlag = !sendButtonFlag;
-        Serial.println("========");
-    }
-
-    if (digitalRead(onButton) == LOW && onButtonFlag)
-    {
-        Serial.println("========");
-        onButtonFlag = !onButtonFlag;
-        Serial.println("onButton");
-        showEEPROM();
-    }
-    else if (digitalRead(onButton) == HIGH && !onButtonFlag)
-    {
-        onButtonFlag = !onButtonFlag;
-        Serial.println("nonButton");
-        Serial.println("========");
-    }
+    updateLeds();
 }
