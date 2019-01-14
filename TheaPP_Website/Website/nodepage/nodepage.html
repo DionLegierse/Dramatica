@@ -3,6 +3,7 @@
 <head>
     <title></title>
     <link rel="stylesheet" href="../style.css" type="text/css">
+    <script type="text/javascript" src="../javascript/jsonfunctions.js"></script>
     <script type="text/javascript" src="nodepage.js"></script>
 </head>
 
@@ -10,7 +11,11 @@
 <div id="body-container">
     <div class="menu-container">
         <div class="button-container">
-            <button class="button-switch">Toggle</button>
+            <button class="button-one" onclick="toggleNode();">Toggle</button>
+            <br>
+            <br>
+            <input id="groupID" type="number" class="input-group" min="0">
+            <button class="button-one" onclick="setGroup();">Set group</button>
         </div>
 
         <div class="button-container">

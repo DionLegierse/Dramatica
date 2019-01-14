@@ -4,6 +4,19 @@
     margin: 0 auto;
 }
 
+.button-container-01{
+    position: fixed;
+}
+
+.button-container-02{
+    padding-top: 50px;
+    padding-bottom: 55px;
+}
+
+.button-container-03{
+    padding-bottom: 55px;
+}
+
 .menu-container{
     text-align: center;
 }
@@ -36,6 +49,16 @@
   border: 1px solid black;
   font-size: 30px;
   background-color: #FAFA00;
+}
+
+.input-group{
+  width: 100%;
+  height: 50px;
+  border-radius: 10px 25px;
+  border: 1px solid black;
+  background-color: #FAFA00;
+  font-size: 30px;
+  text-align: center;
 }
 
 #logo{

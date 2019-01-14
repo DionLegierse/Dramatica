@@ -16,18 +16,16 @@ function listGroups()
 
   var groupList = document.createElement('div');
 
-  addButton("una", groupList);
-
   for( var i = 0; i < nodes.length; i++ )
   {
       var node = nodes[i];
-      if( node.group != "una" )
+      if( node.Group != "0" )
       {
           var foundSame = 0;
 
           for( var j = 0; j < groups.length; j++ )
           {
-              if( node.group == groups[j] )
+              if( node.Group == groups[j] )
               {
                   foundSame = 1;
                   break;
@@ -36,11 +34,13 @@ function listGroups()
 
           if( foundSame != 1 )
           {
-              addButton(node.group, groupList);
-              groups.push(node.group);
+              addButton(node.Group, groupList);
+              groups.push(node.Group);
           }
       }
   }
+
+  addButton("una", groupList);
 
   document.getElementById("groups").appendChild(groupList)
 }
@@ -49,7 +49,7 @@ function addButton(text, parent)
 {
     var but = document.createElement('button');
 
-    if( text != "una" )
+    if( text != "0" )
         but.appendChild(document.createTextNode(text));
     else
         but.appendChild(document.createTextNode("Unassigned"));

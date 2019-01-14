@@ -2,7 +2,7 @@ var nodes;
 
 function fetchList()
 {
-    sendHTTPRequest("list");
+    sendHTTPRequest('{"ADD":0,"CMD":"GET","ARG":0}');
 }
 
 
@@ -24,7 +24,9 @@ function sendHTTPRequest(message)
      */
     xhr.onload = function() {
         var text = xhr.responseText;
-        nodes = JSON.parse(text);
+
+        if( message == '{"ADD":0,"CMD":"GET","ARG":0}' )
+            nodes = JSON.parse(text);
     };
 
     xhr.onerror = function() {
@@ -48,8 +50,6 @@ function createCORSRequest(method, url)
         // CORS is not supported
         xhr = null;
     }
-
-
-
+    
     return xhr;
 }

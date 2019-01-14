@@ -1,4 +1,4 @@
-var group = 'x';
+var group = '0';
 
 group = getURLParameter('group');
 
@@ -29,16 +29,40 @@ function listNodes()
     for( var i = 0; i < nodes.length; i++ )
     {
         var node = nodes[i];
-        if(node.group == group)
+        if(node.Group == group)
         {
             var but = document.createElement('button');
-            but.appendChild(document.createTextNode(node.id));
+            but.appendChild(document.createTextNode(node.ADDress));
             but.setAttribute("class", "button-one");
-            but.setAttribute("onclick", "goToNode('" + node.id + "')")
+            but.setAttribute("onclick", "goToNode('" + node.Address + "')")
             nodeList.appendChild(but);
         }
     }
     document.getElementById("nodes").appendChild(nodeList)
+}
+
+function groupOn()
+{
+    for( var i = 0; i < nodes.length; i++ )
+    {
+        var node = nodes[i];
+        if( node.Group == group )
+        {
+            sendHTTPRequest('{"ADD":' + node.ADDress + ',"CMD":"ON","ARG":0}');
+        }
+    }
+}
+
+function groupOff()
+{
+    for( var i = 0; i < nodes.length; i++ )
+    {
+        var node = nodes[i];
+        if( node.Group == group )
+        {
+            sendHTTPRequest('{"ADD":' + node.ADDress + ',"CMD":"OFF","ARG":0}');
+        }
+    }
 }
 
 function goToNode( node )

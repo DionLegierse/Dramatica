@@ -18,6 +18,16 @@ function getURLParameter(name)
     }
 }
 
+function toggleNode()
+{
+    sendHTTPRequest('{"ADD":' + node + ',"CMD":"T","ARG":0}');
+}
+
+function setGroup()
+{
+    sendHTTPRequest('{"ADD:"' + node + ',"CMD":"G","ARG":' + document.getElementById("groupID").value + '}')
+}
+
 function goBack()
 {
     location.href = "../grouppage/grouppage.html?group=" + group;
