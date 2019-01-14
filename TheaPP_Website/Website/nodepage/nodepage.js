@@ -21,11 +21,13 @@ function getURLParameter(name)
 function toggleNode()
 {
     sendHTTPRequest('{"ADD":' + node + ',"CMD":"T","ARG":0}');
+    // sendHTTPRequest('{"ADD":2391144049,"CMD":"T","ARG":0}');
 }
 
 function setGroup()
 {
-    sendHTTPRequest('{"ADD:"' + node + ',"CMD":"G","ARG":' + document.getElementById("groupID").value + '}')
+    if(document.getElementById("groupID").value)
+        sendHTTPRequest('{"ADD:"' + node + ',"CMD":"G","ARG":' + document.getElementById("groupID").value + '}')
 }
 
 function goBack()

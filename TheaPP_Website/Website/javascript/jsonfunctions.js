@@ -10,7 +10,9 @@ function sendHTTPRequest(message)
 {
     console.log("Attempting to send request");
 
-    var url = "http://127.0.0.1:3000?message=" + message;
+    var url = "http://192.168.11.14:3000?message=" + message;
+
+    console.log(url);
 
     var xhr = createCORSRequest('GET', url);
 
@@ -50,6 +52,6 @@ function createCORSRequest(method, url)
         // CORS is not supported
         xhr = null;
     }
-    
+
     return xhr;
 }

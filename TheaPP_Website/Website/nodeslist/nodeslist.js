@@ -40,7 +40,7 @@ function listGroups()
       }
   }
 
-  addButton("una", groupList);
+  addButton("0", groupList);
 
   document.getElementById("groups").appendChild(groupList)
 }
