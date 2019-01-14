@@ -276,7 +276,8 @@ void setup()
     mesh.onChangedConnections(&changedConnectionCallback);
     mesh.onNodeTimeAdjusted(&nodeTimeAdjustedCallback);
 
-    Serial.println("CombiNode");
+    Serial.println("Type: CombiNode");
+    Serial.println("Address: " + mesh.getNodeId() );
 }
 
 void loop()

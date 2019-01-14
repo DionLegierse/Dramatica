@@ -58,7 +58,8 @@ void setup()
     mesh.onChangedConnections(&changedConnectionCallback);
     mesh.onNodeTimeAdjusted(&nodeTimeAdjustedCallback);
 
-    Serial.println("BorderNode");
+    Serial.println("Type: BorderNode");
+    Serial.println("Address: " + mesh.getNodeId() );
 }
 
 void loop()
