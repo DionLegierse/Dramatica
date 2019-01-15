@@ -26,11 +26,9 @@ function toggleNode()
 
 function setGroup()
 {
-    var mess = '{"ADD:"' + node + ',"CMD":"G","ARG":' + document.getElementById("groupID").value + '}';
+    var mess = '{"ADD":' + node + ',"CMD":"G","ARG":' + document.getElementById("groupID").value + '}';
     if(document.getElementById("groupID").value)
         sendHTTPRequest(mess);
-
-    alert(mess);
 }
 
 function goBack()

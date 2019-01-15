@@ -1,7 +1,5 @@
 var group = '0';
 
-group = getURLParameter('group');
-
 function goBack()
 {
     location.href = "../nodeslist/nodeslist.html"
@@ -23,6 +21,8 @@ function getURLParameter(name)
 
 function listNodes()
 {
+    group = getURLParameter('group');
+
     fetchList();
 
     var nodeList = document.createElement('div');
@@ -32,7 +32,7 @@ function listNodes()
         if(node.Group == group)
         {
             var but = document.createElement('button');
-            but.appendChild(document.createTextNode(node.ADDress));
+            but.appendChild(document.createTextNode(node.Address));
             but.setAttribute("class", "button-one");
             but.setAttribute("onclick", "goToNode('" + node.Address + "')")
             nodeList.appendChild(but);
@@ -48,7 +48,8 @@ function groupOn()
         var node = nodes[i];
         if( node.Group == group )
         {
-            sendHTTPRequest('{"ADD":' + node.ADDress + ',"CMD":"ON","ARG":0}');
+            var mess = '{"ADD":' + node.Address + ',"CMD":"ON","ARG":0}';
+            sendHTTPRequest(mess);
         }
     }
 }
@@ -60,7 +61,7 @@ function groupOff()
         var node = nodes[i];
         if( node.Group == group )
         {
-            sendHTTPRequest('{"ADD":' + node.ADDress + ',"CMD":"OFF","ARG":0}');
+            sendHTTPRequest('{"ADD":' + node.Address + ',"CMD":"OFF","ARG":0}');
         }
     }
 }
