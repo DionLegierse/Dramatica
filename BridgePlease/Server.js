@@ -1,14 +1,69 @@
-console.log("AAAA EEFREEF");
-const express = require('express')
-const app = express()
-const port = 3000
+const SerialPort = require('serialport');
+const parsers = SerialPort.parsers;
+const express = require('express');
+const cors = require('cors');
+const app = express();
+const httpport = 3000;
 
-app.get('/', (req, res) => {
+var isResponseLocked = false;
+var response;
 
-    var response = {'ip' : req.ip, 'message' : req.query.message, 'AAAA': req.query.int}
-    res.setHeader('Content-Type', 'application/json');
-    res.send(JSON.stringify(response));
-    console.log(JSON.stringify(response));
+//Serial
+const parser = new parsers.Readline({
+  delimiter: '\r\n',
 });
 
-app.listen(port, () => console.log('Example app listening on port ${port}!'));
+const port = new SerialPort('/dev/serial0', {
+  baudRate: 9600,
+});
+
+port.pipe(parser);
+
+port.on('open', () => {
+    console.log('Port open');
+    port.write("{ \"ADD\": 2391144049, \"CMD\": \"T\", \"ARG\": 0 }");
+});
+
+parser.on('data', (data) => {
+    response = ListNodes(data);
+  });
+
+//Webserver
+
+app.use(cors());
+
+app.get('/', (req,res) => {
+    var message = req.query.message;
+    var messageObj = JSON.parse(message);
+    console.log(req.query.message);
+    console.log(messageObj);
+    if(messageObj.CMD == 'GET'){
+        isResponseLocked = true;
+    }
+    port.write(message);
+
+    res.send(response);
+});
+
+app.listen(httpport, () => console.log('listen on ${port}'));
+
+
+//port.write("{ \"ADD\": 2391144049, \"CMD\": \"T\", \"ARG\": 0 }");
+
+
+function ListNodes(input){
+
+    //Rinke code
+    var inbuffer = Buffer.from(input);
+    var inbufStr = inbuffer.toString();
+    var inbufStrArr = inbufStr.split('\r\n');
+    var outbuff;
+    inbufStrArr.forEach(element => {
+        console.log(element);
+        outbuff = element;
+    });
+    isResponseLocked = false;
+    return outbuff;
+    
+    //JSON.parse(inbuf);
+}
