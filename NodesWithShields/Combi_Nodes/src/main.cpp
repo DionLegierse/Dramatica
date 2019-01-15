@@ -7,8 +7,8 @@ Default Json format
 #include <EEPROM.h>
 
 #define     MESH_PORT       5555
-#define     MESH_PREFIX     "whateverYouLike"
-#define     MESH_PASSWORD   "somethingSneaky"
+#define     MESH_PREFIX     "whateverYouLik"
+#define     MESH_PASSWORD   "somethingSneak"
 #define     EEPROM_ADDRESS  0
 
 //variables for the eeprom
@@ -108,6 +108,24 @@ void callback(String msg, uint32_t from)
         else if (strcmp(root["CMD"], "G") == 0)
         {
             data.group = root["ARG"];
+        }
+        else if (strcmp(root["CMD"], "U"))
+        {
+            uint n = 0;
+            bool go = true;
+
+            while (go)
+            {
+                if (data.address[n] == root["ARG"])
+                {
+                    data.address[n] = 0;
+                    go = false;
+                }
+                else
+                {
+                    n++;
+                }
+            }
         }
         else
         {
@@ -224,6 +242,27 @@ void onButtonFunction()
     }
 }
 
+void resetbuttonFunction()
+{
+    if (digitalRead(resetButton) == LOW && resetFlag)
+    {
+        Serial.println("========");
+        Serial.println("resetButton");
+        resetFlag = !resetFlag;
+        for (int i = 0 ; i < EEPROM.length() ; i++)
+        {
+            EEPROM.write(i, 0);
+            Serial.println("Cleared");
+        }
+    }
+    else if (digitalRead(resetButton) == HIGH && !resetFlag)
+    {
+        resetFlag = !resetFlag;
+        Serial.println("nonButton");
+        Serial.println("========");
+    }
+}
+
 //painlessmesh main
 void normalCallback( uint32_t from, String &msg )
 {
@@ -277,7 +316,8 @@ void setup()
     mesh.onNodeTimeAdjusted(&nodeTimeAdjustedCallback);
 
     Serial.println("Type: CombiNode");
-    Serial.println("Address: " + mesh.getNodeId() );
+    Serial.printf("Address: ");
+    Serial.println( mesh.getNodeId() );
 }
 
 void loop()
@@ -287,6 +327,7 @@ void loop()
 
     onButtonFunction();
     sendButtonFunction();
+    resetbuttonFunction();
 
     updateLeds();
 }

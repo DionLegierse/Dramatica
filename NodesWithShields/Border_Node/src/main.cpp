@@ -5,8 +5,8 @@ Default Json format
 
 #include "painlessMesh.h"
 
-#define   MESH_PREFIX     "whateverYouLike"
-#define   MESH_PASSWORD   "somethingSneaky"
+#define   MESH_PREFIX     "whateverYouLik"
+#define   MESH_PASSWORD   "somethingSneak"
 #define   MESH_PORT       5555
 
 char msgSerial[100];
@@ -59,7 +59,8 @@ void setup()
     mesh.onNodeTimeAdjusted(&nodeTimeAdjustedCallback);
 
     Serial.println("Type: BorderNode");
-    Serial.println("Address: " + mesh.getNodeId() );
+    Serial.printf("Address: ");
+    Serial.println( mesh.getNodeId() );
 }
 
 void loop()
@@ -110,6 +111,10 @@ void loop()
             {
                 mesh.sendSingle(ADD, jsonOut);
             }
+            else if (strcmp(root["CMD"], "U") == 0)
+            {
+                mesh.sendSingle(ADD, jsonOut);
+            }
             else if (strcmp(root["CMD"], "T") == 0)
             {
                 msgOut = "T";
@@ -155,14 +160,16 @@ void loop()
 
     if (nodeCount == nodeAmount && getNodeInfo)
     {
-        String toBridge = "[{";
+        String toBridge = "[";
 
         for (size_t i = 0; i < nodeAmount; i++)
         {
             toBridge += bridgeJson[i] + ", ";
         }
 
-        toBridge += "}]";
+        toBridge.remove(toBridge.length()-2);
+        toBridge += "]";
+
 
         Serial.println(toBridge);
 
