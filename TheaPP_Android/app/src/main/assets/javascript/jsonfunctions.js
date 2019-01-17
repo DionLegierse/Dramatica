@@ -1,7 +1,13 @@
 var nodes;
+var timer;
 
 function fetchList()
 {
+    sendHTTPRequest('{"ADD":0,"CMD":"GET","ARG":0}');
+    while( timer < 1000 ) {
+        timer++
+    }
+    timer = 0;
     sendHTTPRequest('{"ADD":0,"CMD":"GET","ARG":0}');
 }
 
