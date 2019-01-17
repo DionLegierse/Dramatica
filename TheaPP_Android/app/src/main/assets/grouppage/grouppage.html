@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <link rel="stylesheet" href="../style.css" type="text/css">
+    <script type="text/javascript" src="../javascript/jsonfunctions.js"></script>
+    <script type="text/javascript" src="grouppage.js"></script>
+</head>
+
+<body>
+<div id="body-container">
+    <div class="menu-container">
+        <div class="button-container button-container-01">
+            <button class="button-switch" onclick="groupOn();">On</button>
+            <button class="button-switch" onclick="groupOff();">Off</button>
+        </div>
+
+        <br>
+
+        <div id="nodes" class="button-container button-container-02"></div>
+
+        <div class="button-container">
+            <button class="button-back" onclick="goBack();"> Close </button>
+        </div>
+    </div>
+</div>
+</body>
+</html>
+
+<script>
+    listNodes();
+</script>
