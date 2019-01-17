@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <link rel="stylesheet" href="../style.css" type="text/css">
+    <script type="text/javascript" src="../javascript/jsonfunctions.js"></script>
+    <script type="text/javascript" src="nodepage.js"></script>
+</head>
+
+<body>
+<div id="body-container">
+    <div class="menu-container">
+        <div class="button-container">
+            <button class="button-one" onclick="toggleNode();">Toggle</button>
+            <br>
+            <br>
+            <input id="groupID" type="number" class="input-group" min="0">
+            <button class="button-one" onclick="setGroup();">Set group</button>
+            <br>
+            <br>
+            <input id="nodeID" type="number" class="input-group" min="0">
+            <button class="button-one" onclick="linkNodes();">Link Nodes</button>
+        </div>
+
+        <div class="button-container">
+            <button class="button-back" onclick="goBack();"> Close </button>
+        </div>
+    </div>
+</div>
+</body>
+</html>
