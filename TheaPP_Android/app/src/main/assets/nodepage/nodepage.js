@@ -21,13 +21,19 @@ function getURLParameter(name)
 function toggleNode()
 {
     sendHTTPRequest('{"ADD":' + node + ',"CMD":"T","ARG":0}');
-    // sendHTTPRequest('{"ADD":2391144049,"CMD":"T","ARG":0}');
 }
 
 function setGroup()
 {
     var mess = '{"ADD":' + node + ',"CMD":"G","ARG":' + document.getElementById("groupID").value + '}';
     if(document.getElementById("groupID").value)
+        sendHTTPRequest(mess);
+}
+
+function linkNodes()
+{
+    var mess = '{"ADD":' + node + ',"CMD":"L","ARG":' + document.getElementById("nodeID").value + '}';
+    if(document.getElementById("nodeID").value)
         sendHTTPRequest(mess);
 }
 
