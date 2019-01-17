@@ -249,7 +249,7 @@ void resetbuttonFunction()
         Serial.println("========");
         Serial.println("resetButton");
         resetFlag = !resetFlag;
-        for (int i = 0 ; i < EEPROM.length() ; i++)
+        for (int i = 0 ; i < 1024 ; i++)
         {
             EEPROM.write(i, 0);
             Serial.println("Cleared");
