@@ -1,6 +1,17 @@
-/*
-Default Json format
-{ "ADD": <address>, "CMD": <command>, "ARG": <target> }
+/**
+@file
+@author  Harm Meyer
+@version 1.0
+
+@section DESCRIPTION
+This is the code of the bordernode.
+
+The default JSON format is:
+{
+    "ADD": <address>,
+    "CMD": <command>,
+    "ARG": <target>
+}
 */
 
 #include "painlessMesh.h"
@@ -21,7 +32,16 @@ bool getNodeInfo = false;
 Scheduler userScheduler; // to control your personal task
 painlessMesh mesh;
 
-// Needed for painless library
+/**
+Recieve callback
+
+This is only used for the GET command. It will check if there is a callback
+from a node. It will then add the JSON to an array of strings. and finally
+it wil merge those JSONS to create on big JSON for the bridge.
+@param  uint32_t from
+@param  String &msg
+@return none
+*/
 void receivedCallback( uint32_t from, String &msg )
 {
     Serial.printf( "startHere: Received from %u msg=%s\n", from, msg.c_str() );
@@ -45,6 +65,15 @@ void nodeTimeAdjustedCallback(int32_t offset)
     Serial.printf("Adjusted time %u. Offset = %d\n", mesh.getNodeTime(),offset);
 }
 
+
+/**
+This function will run once on startup
+
+Sets the baudrate and prepares the mesh network. After that it prints out if
+the node is a bordernode or a combinode and the address of the
+@param  none
+@return none
+*/
 void setup()
 {
     Serial.begin(9600);
@@ -63,6 +92,16 @@ void setup()
     Serial.println( mesh.getNodeId() );
 }
 
+/**
+This function will loop
+
+It wil first check for a serial input. if there is a serial input then it wil
+check if that input is in a JSON format. If it is in a JSON format then it
+will parse it and handle the parameters that it got as input. It also runs the
+mesh and the scheduler.
+@param  none
+@return none
+*/
 void loop()
 {
     userScheduler.execute(); // it will run mesh scheduler as well

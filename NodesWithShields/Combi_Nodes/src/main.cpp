@@ -1,6 +1,17 @@
-/*
-Default Json format
-{ "ADD": <address>, "CMD": <command>, "ARG": <target> }
+/**
+@file
+@author  Harm Meyer
+@version 1.0
+
+@section DESCRIPTION
+This is the code of the bordernode.
+
+The default JSON format is:
+{
+    "ADD": <address>,
+    "CMD": <command>,
+    "ARG": <target>
+}
 */
 
 #include "painlessMesh.h"
@@ -11,7 +22,6 @@ Default Json format
 #define     MESH_PASSWORD   "somethingSneak"
 #define     EEPROM_ADDRESS  0
 
-//variables for the eeprom
 struct
 {
     uint32_t ID = 123;
@@ -38,6 +48,12 @@ bool resetFlag = true;
 Scheduler userScheduler;
 painlessMesh mesh;
 
+/**
+Toggles Red LED
+
+@param  none
+@return none
+*/
 void toggleRedLed()
 {
     //toggle
@@ -47,6 +63,12 @@ void toggleRedLed()
         redFlag = !redFlag;
 }
 
+/**
+Toggles Green led
+
+@param  none
+@return none
+*/
 void toggleGreenLed()
 {
     //toggle
@@ -56,6 +78,12 @@ void toggleGreenLed()
         greenFlag = !greenFlag;
 }
 
+/**
+Updates led status
+
+@param  none
+@return none
+*/
 void updateLeds()
 {
     //digitalwrite
@@ -71,6 +99,17 @@ void updateLeds()
         digitalWrite(green, LOW);
 }
 
+/**
+Recieve callback
+
+This function gets a message and wil check if that message is a JSON. When
+it isn't in JSON format it will execute the command if that command is a
+command it recognizes. If it is a JSON then it will parse it and check the
+command. Next it will execute the command.
+@param  uint32_t from
+@param  String &msg
+@return none
+*/
 void callback(String msg, uint32_t from)
 {
     Serial.println("Parsing...");
@@ -171,7 +210,13 @@ void callback(String msg, uint32_t from)
     }
 }
 
-//EEPROM functions
+
+/**
+Shows the data in the EEPROM
+
+@param  none
+@return none
+*/
 void showEEPROM()
 {
     EEPROM.get(EEPROM_ADDRESS, data);
@@ -191,13 +236,25 @@ void showEEPROM()
     Serial.println("========");
 }
 
+/**
+Writes to EEPROM
+
+@param  none
+@return none
+*/
 void writeEEPROM()
 {
     EEPROM.put(EEPROM_ADDRESS, data);
     EEPROM.commit();
 }
 
-//Button Functions
+/**
+Button press chekcer
+
+Checks if the sendbutton is being pressed. It wil send out a msg if it is.
+@param  none
+@return none
+*/
 void sendButtonFunction()
 {
     //read button 0 and turn on/off led 0
@@ -225,6 +282,13 @@ void sendButtonFunction()
     }
 }
 
+/**
+Button press chekcer
+
+Checks if the onbutton is being pressed. It wil read out the EEPROM if it is.
+@param  none
+@return none
+*/
 void onButtonFunction()
 {
     if (digitalRead(onButton) == LOW && onButtonFlag)
@@ -242,6 +306,13 @@ void onButtonFunction()
     }
 }
 
+/**
+Button press chekcer
+
+Checks if the resetbutton is being pressed. If it is then it will clear the EEPROM.
+@param  none
+@return none
+*/
 void resetbuttonFunction()
 {
     if (digitalRead(resetButton) == LOW && resetFlag)
@@ -249,11 +320,15 @@ void resetbuttonFunction()
         Serial.println("========");
         Serial.println("resetButton");
         resetFlag = !resetFlag;
-        for (int i = 0 ; i < 1024 ; i++)
+
+        data.ID = 123;
+        data.group = 0;
+        data.size = 0;
+        for (int i = 0 ; i < 64 ; i++)
         {
-            EEPROM.write(i, 0);
-            Serial.println("Cleared");
+            data.address[i] = 0;
         }
+        writeEEPROM();
     }
     else if (digitalRead(resetButton) == HIGH && !resetFlag)
     {
@@ -263,7 +338,15 @@ void resetbuttonFunction()
     }
 }
 
-//painlessmesh main
+/**
+normal callback
+
+Is used by painlessmesh to check for a callback from a node. First it will run
+the Callback() function. Then it will read out the EEPROM. After that it shows
+what's in the EEPROM to validate the data.
+@param  none
+@return none
+*/
 void normalCallback( uint32_t from, String &msg )
 {
     Serial.println("========");
@@ -295,6 +378,15 @@ void nodeTimeAdjustedCallback(int32_t offset)
     Serial.printf("Adjusted time %u. Offset = %d\n", mesh.getNodeTime(),offset);
 }
 
+/**
+This function will run once on startup
+
+Sets the baudrate and prepares the mesh network. After that it prints out if
+the node is a bordernode or a combinode and the address the node. This also
+preps the EEPROM.
+@param  none
+@return none
+*/
 void setup()
 {
     Serial.begin(9600);
@@ -320,6 +412,14 @@ void setup()
     Serial.println( mesh.getNodeId() );
 }
 
+/**
+This function will loop
+
+Reads out the button inputs and updates the led. It also runs the mesh and
+scheduler.
+@param  none
+@return none
+*/
 void loop()
 {
     userScheduler.execute();
